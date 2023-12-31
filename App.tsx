@@ -1,118 +1,104 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {Canvas, Image, useImage} from '@shopify/react-native-skia';
 import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import {Dimensions, StyleSheet, useWindowDimensions, View} from 'react-native';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import {SceneMap, TabView, TabBar} from 'react-native-tab-view';
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+const FirstRoute = () => (
+  <View style={{flex: 1, backgroundColor: 'transparent'}} />
+);
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+const SecondRoute = () => (
+  <View style={{flex: 1, backgroundColor: 'transparent'}} />
+);
+
+const renderScene = SceneMap({
+  first: FirstRoute,
+  second: SecondRoute,
+});
+
+const Stack = createNativeStackNavigator();
+
+function App() {
   return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
+    <GestureHandlerRootView style={{flex: 1}}>
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Screen
+            name="Home"
+            component={Main}
+            options={{headerShown: false}}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </GestureHandlerRootView>
   );
 }
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+function Main(): React.JSX.Element {
+  const imageLight = useImage(require('./body_bg.png'));
+  const imageDark = useImage(require('./body_bg_dark.png'));
+  const layout = useWindowDimensions();
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
-
+  const [index, setIndex] = React.useState(0);
+  const image = index === 0 ? imageLight : imageDark;
+  const [routes] = React.useState([
+    {key: 'first', title: 'Tab 1'},
+    {key: 'second', title: 'Tab 2'},
+  ]);
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
+    <SafeAreaView style={{flex: 1}}>
+      <Canvas
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 1,
+          width: '100%',
+          height: '100%',
+        }}>
+        {image && (
+          <Image
+            image={image}
+            fit="cover"
+            x={0}
+            y={0}
+            width={Dimensions.get('window').width}
+            // height={100}
+            height={
+              (Dimensions.get('window').width * image.height()) / image.width()
+            }
+          />
+        )}
+      </Canvas>
+      <TabView
+        renderTabBar={props => (
+          <TabBar
+            {...props}
+            style={{
+              backgroundColor: 'transparent',
+              borderBottomColor: 'white',
+              borderBottomWidth: 1,
+            }}
+            labelStyle={{
+              color: 'white',
+              fontWeight: '500',
+              fontSize: 14,
+              textTransform: 'none',
+            }}
+            indicatorStyle={{backgroundColor: 'white', height: 5}}
+          />
+        )}
+        navigationState={{index, routes}}
+        renderScene={renderScene}
+        onIndexChange={setIndex}
+        initialLayout={{width: layout.width}}
       />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
 
 export default App;
